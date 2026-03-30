@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moon Echo — HIROSHI MEHATA</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --paper: #f0ece4;
+    --ink: #1a1410;
+    --ash: #8a8078;
+    --ember: #c8401a;
+    --moon: #d4c9b0;
+    --void: #050505;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--moon);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.4;
+  }
+
+  .container {
+    width: min(680px, 92vw);
+    padding: 3rem 0;
+    position: relative;
+  }
+
+  /* header */
+  .header {
+    margin-bottom: 4rem;
+    position: relative;
+  }
+
+  .title-jp {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--paper);
+    margin-bottom: 0.3rem;
+  }
+
+  .title-sub {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    color: var(--ash);
+    text-transform: uppercase;
+  }
+
+  .header-line {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, var(--ember), transparent);
+    margin-top: 1.5rem;
+  }
+
+  /* moon orb */
+  .orb-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 2.5rem 0 3rem;
+    position: relative;
+  }
+
+  .orb {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 35%, #e8dfc8, #b8a888 40%, #5a4e3a 75%, #1a140e);
+    box-shadow:
+      0 0 60px rgba(212, 201, 176, 0.08),
+      inset 0 0 40px rgba(0,0,0,0.6);
+    position: relative;
+    transition: box-shadow 0.3s ease;
+    cursor: pointer;
+  }
+
+  .orb.listening {
+    animation: orb-pulse 2s ease-in-out infinite;
+    box-shadow:
+      0 0 80px rgba(200, 64, 26, 0.2),
+      0 0 120px rgba(200, 64, 26, 0.08),
+      inset 0 0 40px rgba(0,0,0,0.6);
+  }
+
+  @keyframes orb-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+
+  /* ripple rings */
+  .ripple-ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 1px solid rgba(212, 201, 176, 0.15);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ripple-ring.active {
+    animation: ripple-expand 2s ease-out infinite;
+  }
+
+  .ripple-ring:nth-child(2) { animation-delay: 0.6s !important; }
+  .ripple-ring:nth-child(3) { animation-delay: 1.2s !important; }
+
+  @keyframes ripple-expand {
+    0%   { width: 180px; height: 180px; opacity: 0.5; }
+    100% { width: 400px; height: 400px; opacity: 0; }
+  }
+
+  /* controls */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .control-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 60px;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .control-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ash);
+    line-height: 1.4;
+  }
+
+  .control-label span {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--moon);
+    letter-spacing: 0.05em;
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    margin-bottom: 2px;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 1px;
+    background: var(--ash);
+    outline: none;
+    cursor: pointer;
+    position: relative;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--paper);
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(240, 236, 228, 0.3);
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+
+  input[type=range]:hover::-webkit-slider-thumb {
+    background: var(--ember);
+    box-shadow: 0 0 12px rgba(200, 64, 26, 0.5);
+  }
+
+  .value-display {
+    font-size: 0.7rem;
+    color: var(--moon);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+  }
+
+  /* divider */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: rgba(138, 128, 120, 0.2);
+    margin: 0.5rem 0;
+  }
+
+  /* main button */
+  .btn-main {
+    width: 100%;
+    padding: 1.1rem;
+    background: transparent;
+    border: 1px solid var(--moon);
+    color: var(--moon);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 0.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-main::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--moon);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+    z-index: 0;
+  }
+
+  .btn-main:hover::before {
+    transform: scaleX(1);
+  }
+
+  .btn-main:hover {
+    color: var(--ink);
+  }
+
+  .btn-main span { position: relative; z-index: 1; }
+
+  .btn-main.active {
+    border-color: var(--ember);
+    color: var(--ember);
+  }
+
+  .btn-main.active::before {
+    background: var(--ember);
+  }
+
+  .btn-main.active:hover {
+    color: var(--paper);
+  }
+
+  /* visualizer */
+  .visualizer-wrap {
+    margin: 2rem 0 0;
+    height: 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    opacity: 0.6;
+  }
+
+  /* status */
+  .status {
+    text-align: center;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--ash);
+    text-transform: uppercase;
+    margin-top: 1.5rem;
+    min-height: 1em;
+    transition: color 0.3s;
+  }
+
+  .status.active { color: var(--ember); }
+
+  /* footer note */
+  .footer-note {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(138,128,120,0.15);
+    font-size: 0.58rem;
+    color: var(--ash);
+    line-height: 1.8;
+    letter-spacing: 0.05em;
+    font-style: italic;
+    font-family: 'IM Fell English', serif;
+  }
+
+  /* delay layers indicator */
+  .layers {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.8rem;
+  }
+
+  .layer-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ash);
+    opacity: 0.3;
+    transition: all 0.3s;
+  }
+
+  .layer-dot.active {
+    background: var(--ember);
+    opacity: 1;
+    box-shadow: 0 0 6px rgba(200, 64, 26, 0.6);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="title-jp">Moon Echo</div>
+    <div class="title-sub">HIROSHI MEHATA &nbsp;/&nbsp; Interactive Sound Installation &nbsp;/&nbsp; 2017–2019</div>
+    <div class="header-line"></div>
+  </div>
+
+  <div class="orb-wrap">
+    <div class="ripple-ring" id="r1"></div>
+    <div class="ripple-ring" id="r2"></div>
+    <div class="ripple-ring" id="r3"></div>
+    <div class="orb" id="orb"></div>
+  </div>
+
+  <div class="controls">
+
+    <div class="control-row">
+      <div class="control-label">
+        <span>Delay Time</span>
+        間 / Ma
+      </div>
+      <input type="range" id="delayTime" min="0.1" max="4.0" step="0.05" value="0.4">
+      <div class="value-display" id="delayVal">0.40s</div>
+    </div>
+
+    <div class="control-row">
+      <div class="control-label">
+        <span>Feedback</span>
+        反響 / Echo
+      </div>
+      <input type="range" id="feedback" min="0" max="0.85" step="0.01" value="0.45">
+      <div class="value-display" id="feedbackVal">45%</div>
+    </div>
+
+    <div class="control-row">
+      <div class="control-label">
+        <span>Layers</span>
+        層 / Strata
+      </div>
+      <input type="range" id="layers" min="1" max="4" step="1" value="2">
+      <div class="value-display" id="layersVal">2</div>
+    </div>
+
+    <div class="control-row">
+      <div class="control-label">
+        <span>Wet Mix</span>
+        空白 / Void
+      </div>
+      <input type="range" id="wetMix" min="0" max="1" step="0.01" value="0.7">
+      <div class="value-display" id="wetVal">70%</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="layers" id="layerDots">
+      <div class="layer-dot" id="d1"></div>
+      <div class="layer-dot" id="d2"></div>
+      <div class="layer-dot" id="d3"></div>
+      <div class="layer-dot" id="d4"></div>
+    </div>
+
+    <div class="visualizer-wrap">
+      <canvas id="viz"></canvas>
+    </div>
+
+    <button class="btn-main" id="mainBtn" onclick="toggleAudio()">
+      <span id="btnText">— Speak into the void —</span>
+    </button>
+
+  </div>
+
+  <div class="status" id="status">use headphones for best experience</div>
+
+  <div class="footer-note">
+    Speak. Listen. Hear the gap between intention and arrival.<br>
+    The delay is not malfunction — it is the structure of all communication.<br>
+    <br>
+    Exhibited at Kameyama Art Triennale (Japan, 2017) and Makassar Biennale (Indonesia, 2019).<br>
+    From the research paper <em>The Logic of Improvisation</em> — submitted to JAR.
+  </div>
+
+</div>
+
+<script>
+let audioCtx = null;
+let micStream = null;
+let sourceNode = null;
+let delayNodes = [];
+let feedbackNodes = [];
+let wetGain = null;
+let dryGain = null;
+let analyser = null;
+let isRunning = false;
+let animFrame = null;
+
+const canvas = document.getElementById('viz');
+const ctx2d = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width = canvas.offsetWidth * devicePixelRatio;
+  canvas.height = canvas.offsetHeight * devicePixelRatio;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function updateLayerDots(n) {
+  for (let i = 1; i <= 4; i++) {
+    const d = document.getElementById('d' + i);
+    d.classList.toggle('active', i <= n && isRunning);
+  }
+}
+
+// sliders
+document.getElementById('delayTime').addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  document.getElementById('delayVal').textContent = v.toFixed(2) + 's';
+  if (isRunning) applyParams();
+});
+
+document.getElementById('feedback').addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  document.getElementById('feedbackVal').textContent = Math.round(v * 100) + '%';
+  if (isRunning) applyParams();
+});
+
+document.getElementById('layers').addEventListener('input', e => {
+  const v = parseInt(e.target.value);
+  document.getElementById('layersVal').textContent = v;
+  updateLayerDots(v);
+  if (isRunning) rebuildGraph();
+});
+
+document.getElementById('wetMix').addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  document.getElementById('wetVal').textContent = Math.round(v * 100) + '%';
+  if (isRunning) applyParams();
+});
+
+function getParams() {
+  return {
+    delayTime: parseFloat(document.getElementById('delayTime').value),
+    feedback: parseFloat(document.getElementById('feedback').value),
+    layers: parseInt(document.getElementById('layers').value),
+    wet: parseFloat(document.getElementById('wetMix').value),
+  };
+}
+
+function applyParams() {
+  const p = getParams();
+  delayNodes.forEach((d, i) => {
+    d.delayTime.value = p.delayTime * (i + 1) * 0.8;
+  });
+  feedbackNodes.forEach(f => { f.gain.value = p.feedback; });
+  if (wetGain) wetGain.gain.value = p.wet;
+  if (dryGain) dryGain.gain.value = 1 - p.wet * 0.5;
+}
+
+async function toggleAudio() {
+  if (isRunning) {
+    stopAudio();
+  } else {
+    await startAudio();
+  }
+}
+
+async function startAudio() {
+  try {
+    document.getElementById('status').textContent = 'requesting microphone…';
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    await audioCtx.resume();
+
+    buildGraph();
+
+    isRunning = true;
+    document.getElementById('mainBtn').classList.add('active');
+    document.getElementById('btnText').textContent = '— stop —';
+    document.getElementById('status').textContent = 'listening — speak now';
+    document.getElementById('status').classList.add('active');
+    document.getElementById('orb').classList.add('listening');
+    document.querySelectorAll('.ripple-ring').forEach(r => r.classList.add('active'));
+    updateLayerDots(getParams().layers);
+    drawViz();
+
+  } catch(e) {
+    document.getElementById('status').textContent = 'microphone access denied';
+    console.error(e);
+  }
+}
+
+function buildGraph() {
+  const p = getParams();
+  delayNodes = [];
+  feedbackNodes = [];
+
+  sourceNode = audioCtx.createMediaStreamSource(micStream);
+
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 256;
+
+  dryGain = audioCtx.createGain();
+  dryGain.gain.value = 1 - p.wet * 0.5;
+
+  wetGain = audioCtx.createGain();
+  wetGain.gain.value = p.wet;
+
+  const merger = audioCtx.createGain();
+  merger.gain.value = 1;
+
+  sourceNode.connect(analyser);
+  sourceNode.connect(dryGain);
+  dryGain.connect(audioCtx.destination);
+
+  for (let i = 0; i < p.layers; i++) {
+    const delay = audioCtx.createDelay(8.0);
+    delay.delayTime.value = p.delayTime * (i + 1) * 0.8;
+
+    const fb = audioCtx.createGain();
+    fb.gain.value = p.feedback;
+
+    const layerGain = audioCtx.createGain();
+    layerGain.gain.value = 1 / p.layers;
+
+    sourceNode.connect(delay);
+    delay.connect(fb);
+    fb.connect(delay);
+    delay.connect(layerGain);
+    layerGain.connect(wetGain);
+
+    delayNodes.push(delay);
+    feedbackNodes.push(fb);
+  }
+
+  wetGain.connect(audioCtx.destination);
+}
+
+function rebuildGraph() {
+  if (!audioCtx) return;
+  // disconnect all
+  try { sourceNode.disconnect(); } catch(e) {}
+  delayNodes.forEach(d => { try { d.disconnect(); } catch(e) {} });
+  feedbackNodes.forEach(f => { try { f.disconnect(); } catch(e) {} });
+  try { wetGain.disconnect(); } catch(e) {}
+  try { dryGain.disconnect(); } catch(e) {}
+  buildGraph();
+  updateLayerDots(getParams().layers);
+}
+
+function stopAudio() {
+  isRunning = false;
+  if (animFrame) cancelAnimationFrame(animFrame);
+
+  if (sourceNode) { try { sourceNode.disconnect(); } catch(e) {} }
+  delayNodes.forEach(d => { try { d.disconnect(); } catch(e) {} });
+  feedbackNodes.forEach(f => { try { f.disconnect(); } catch(e) {} });
+  try { wetGain.disconnect(); } catch(e) {}
+  try { dryGain.disconnect(); } catch(e) {}
+
+  if (micStream) micStream.getTracks().forEach(t => t.stop());
+  if (audioCtx) audioCtx.close();
+
+  audioCtx = null; micStream = null; sourceNode = null;
+  delayNodes = []; feedbackNodes = [];
+  wetGain = null; dryGain = null; analyser = null;
+
+  document.getElementById('mainBtn').classList.remove('active');
+  document.getElementById('btnText').textContent = '— Speak into the void —';
+  document.getElementById('status').textContent = 'use headphones for best experience';
+  document.getElementById('status').classList.remove('active');
+  document.getElementById('orb').classList.remove('listening');
+  document.querySelectorAll('.ripple-ring').forEach(r => r.classList.remove('active'));
+  updateLayerDots(0);
+
+  // clear canvas
+  ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawViz() {
+  if (!isRunning || !analyser) return;
+  animFrame = requestAnimationFrame(drawViz);
+
+  const buf = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteTimeDomainData(buf);
+
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx2d.clearRect(0, 0, w, h);
+
+  ctx2d.beginPath();
+  ctx2d.strokeStyle = 'rgba(212, 201, 176, 0.7)';
+  ctx2d.lineWidth = 1 * devicePixelRatio;
+
+  const slice = w / buf.length;
+  let x = 0;
+  for (let i = 0; i < buf.length; i++) {
+    const v = buf[i] / 128.0;
+    const y = (v * h) / 2;
+    if (i === 0) ctx2d.moveTo(x, y);
+    else ctx2d.lineTo(x, y);
+    x += slice;
+  }
+  ctx2d.stroke();
+}
+</script>
+</body>
+</html>
