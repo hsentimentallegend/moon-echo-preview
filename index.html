@@ -482,7 +482,7 @@ function applyParams() {
   });
   feedbackNodes.forEach(f => { f.gain.value = p.feedback; });
   if (wetGain) wetGain.gain.value = p.wet;
-  if (dryGain) dryGain.gain.value = 1 - p.wet * 0.5;
+  if (dryGain) dryGain.gain.value = 1 - p.wet;
 }
 
 async function toggleAudio() {
