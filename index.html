@@ -530,7 +530,7 @@ function buildGraph() {
   analyser.fftSize = 256;
 
   dryGain = audioCtx.createGain();
-  dryGain.gain.value = 1 - p.wet * 0.5;
+  dryGain.gain.value = 1 - p.wet;
 
   wetGain = audioCtx.createGain();
   wetGain.gain.value = p.wet;
